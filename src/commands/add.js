@@ -24,7 +24,50 @@ export const add = {
     await interaction.deferReply();
 
     const subject = interaction.options.getString("subject");
+    const title = interaction.options.getString("title");import { SlashCommandBuilder } from "discord.js";
+import Task from "../models/Task.js";
+
+export const add = {
+  data: new SlashCommandBuilder()
+    .setName("add")
+    .setDescription("新しい課題を登録します")
+    .addStringOption(option =>
+      option.setName("subject").setDescription("科目名（例：プログラミング）").setRequired(true)
+    )
+    .addStringOption(option =>
+      option.setName("title").setDescription("課題内容（例：最終レポート）").setRequired(true)
+    )
+    .addStringOption(option =>
+      option.setName("deadline").setDescription("締切（例：2026-07-19）").setRequired(true)
+    ),
+
+  async execute(interaction) {
+    const subject = interaction.options.getString("subject");
     const title = interaction.options.getString("title");
+    const deadline = interaction.options.getString("deadline");
+    const userId = interaction.user.id;
+
+    try {
+      // データベース(PostgreSQL)にタスクを保存
+      const task = await Task.create({
+        subject,
+        title,
+        deadline,
+        userId,
+        completed: false
+      });
+
+      // 登録完了メッセージを返信
+      await interaction.reply({
+        content: `✅ **課題を登録しました！** (ID: ${task.id})\n📚 **科目**: ${subject}\n📌 **課題**: ${title}\n📅 **締切**: ${deadline}`
+      });
+
+    } catch (error) {
+      console.error(error);
+      await interaction.reply("❌ 課題の登録中にエラーが発生しました。入力形式を確認してください。");
+    }
+  }
+};
     const deadline = interaction.options.getString("deadline");
     const userId = interaction.user.id;
 
